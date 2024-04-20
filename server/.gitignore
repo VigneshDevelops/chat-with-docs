@@ -1,0 +1,16 @@
+# Byte-compiled / optimized Python files
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+env/
+
+# env files
+*.env
+
+.DS_Store
+
+
+# file uploads
+uploads

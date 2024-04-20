@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = ["karthik1881 <“Karthik”@itero.ie>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.110.1"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+dev = "run:main"
+
+
