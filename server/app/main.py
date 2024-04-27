@@ -1,9 +1,7 @@
 from fastapi import FastAPI
-from typing import Dict
+from app.routes.file_upload import router as file_upload_router
 
-app = FastAPI()  # <- the ASGI entrypoint
+app = FastAPI()
 
 
-@app.get("/")
-def index() -> Dict:
-    return {"greating": "hello"}
+app.include_router(file_upload_router, prefix="/api")
