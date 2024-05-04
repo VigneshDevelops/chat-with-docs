@@ -1,0 +1,78 @@
+/* FileUpload component styles */
+.file-upload-container {
+    margin-bottom: 20px;
+  }
+  
+  .upload-button {
+    padding: 10px 15px;
+    background-color: #4b90ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+  }
+  
+  .upload-button:hover {
+    background-color: #3a74db;
+  }
+  
+  .file-list {
+    margin-top: 10px;
+  }
+  
+  .file-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f0f4f9;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .file-list-item span {
+    color: #585858;
+    font-size: 16px;
+    flex-grow: 1;
+  }
+  
+  .file-remove-button {
+    background: none;
+    border: none;
+    color: red;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .file-remove-button:hover {
+    opacity: 0.8;
+  }
+  
+  .upload-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+  }
+
+  .upload-button .loader {
+    border: 2px solid transparent;
+    border-top: 2px solid white; /* Change color as needed */
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+  }
+  
+  /* Spinner animation */
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }

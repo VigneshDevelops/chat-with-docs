@@ -8,7 +8,7 @@ from app.constant import FILE_UPLOAD_LIMIT
 router = APIRouter()
 
 
-@router.post("/upload-files/")
+@router.post("/")
 async def upload_files(
     files: List[UploadFile] = File(..., description="Files to be uploaded")
 ):
