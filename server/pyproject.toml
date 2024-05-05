@@ -13,7 +13,7 @@ langchain = "^0.1.16"
 langchain-core = "^0.1.46"
 langchain-community = "^0.0.34"
 python-multipart = "^0.0.9"
-unstructured = { version = "^0.12.0", extras = ["pdf"], python = ">=3.11,<3.12" }
+unstructured = { version = "^0.12.0", extras = ["docx", "pdf"], python = ">=3.11,<3.12" }
 langchain-openai = "^0.1.4"
 langchain_pinecone = { version = "^0.1.0", python = ">=3.11,<3.12" }
 python-dotenv = "^1.0.1"

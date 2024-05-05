@@ -2,11 +2,15 @@ from langchain_community.document_loaders import DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.chains import ConversationalRetrievalChain
 from app.config import PINECONE_INDEX
-from langchain_core.prompts import PromptTemplate
 import asyncio
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
+from langchain.schema import AIMessage, HumanMessage
+
+
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
 
 async def create_embeddings_for_docs(url):
@@ -25,49 +29,83 @@ async def create_embeddings_for_docs(url):
 
     # embedding model
     embeddings = OpenAIEmbeddings()
+    
+    # delete all 
+    try:
+        PineconeVectorStore(embedding=embeddings, index_name=PINECONE_INDEX).delete(
+            delete_all=True
+        )
+    except Exception:
+        pass
 
     PineconeVectorStore.from_documents(texts, embeddings, index_name=PINECONE_INDEX)
     print("Embedding Created")
 
 
-async def conversational_qa_chain(question: str, chat_history=[], callback=None):
-    try:
-        embeddings = OpenAIEmbeddings()
-        vectorstore = PineconeVectorStore(
-            embedding=embeddings, index_name=PINECONE_INDEX
-        )
-        llm = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=0, streaming=True, callbacks=[callback]
-        )
-        retriever = vectorstore.as_retriever()
-        template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know; don't try to make up an answer. Provide your answer in markdown format if necessary.
-        context: {context}
-        Question: {question}"""
+def form_history_obj(history):
+    new_history = []
+    for entry in history:
+        if entry["type"] == "ai_response":
+            ai_message = AIMessage(entry["message"])
+            new_history.append(ai_message)
+        elif entry["type"] == "user_prompt":
+            human_message = HumanMessage(entry["message"])
+            new_history.append(human_message)
 
-        QA_CHAIN_PROMPT = PromptTemplate(
-            input_variables=["context", "question"], template=template
-        )
+    return new_history
 
-        chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=retriever,
-            return_source_documents=True,
-            combine_docs_chain_kwargs={"prompt": QA_CHAIN_PROMPT},
-            verbose=True,
-        )
-        return chain
-        # input = {"question": question, "chat_history": chat_history}
-        # result = chain.invoke(input)
-        # return result
-    except Exception as e:
-        print(e)
-        raise e
+
+async def qa_chain(callback=AsyncIteratorCallbackHandler()):
+    contextualize_q_system_prompt = """
+Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is.
+"""
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+    embeddings = OpenAIEmbeddings()
+    vectorstore = PineconeVectorStore(embedding=embeddings, index_name=PINECONE_INDEX)
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    retriever = vectorstore.as_retriever()
+    history_aware_retriever = create_history_aware_retriever(
+        llm, retriever, contextualize_q_prompt
+    )
+    qa_system_prompt = """
+    You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know.
+
+    {context}
+    
+     Always provide your answers in markdown format
+    """
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", qa_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+    streaming_llm = ChatOpenAI(
+        model="gpt-3.5-turbo",
+        temperature=0,
+        streaming=True,
+        callbacks=[callback],
+        verbose=True,
+    )
+    question_answer_chain = create_stuff_documents_chain(streaming_llm, qa_prompt)
+
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+
+    return rag_chain
 
 
 async def chat(question: str, chat_history=[]):
     try:
-        chain = await conversational_qa_chain(question, chat_history)
-        input = {"question": question, "chat_history": chat_history}
+        chain = await qa_chain()
+        history = form_history_obj(chat_history)
+        input = {"input": question, "chat_history": history}
         result = chain.invoke(input)
         return result
     except Exception as e:
@@ -78,8 +116,9 @@ async def chat(question: str, chat_history=[]):
 async def chat_stream(question: str, chat_history=[]):
     try:
         callback = AsyncIteratorCallbackHandler()
-        chain = await conversational_qa_chain(question, chat_history, callback)
-        input = {"question": question, "chat_history": chat_history}
+        chain = await qa_chain(callback)
+        history = form_history_obj(chat_history)
+        input = {"input": question, "chat_history": history}
         task = asyncio.create_task(chain.ainvoke(input=input))
         print("Stream start")
         async for token in callback.aiter():

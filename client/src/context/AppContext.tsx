@@ -79,7 +79,7 @@ const AppProvider: FC<{ children: ReactNode }> = ({ children }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt, history: [] }),
+        body: JSON.stringify({ prompt, history: chatHistory }),
       });
 
       // Check if the response is not OK

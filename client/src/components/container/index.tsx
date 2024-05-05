@@ -30,7 +30,7 @@ const Container: React.FC = () => {
   return (
     <div className="main">
       <div className="nav">
-        <p>VigneshDevelops</p>
+        <a href="https://github.com/VigneshDevelops/chat-with-docs" target="new"><p>VigneshDevelops</p> </a>
         <img src={assets.user} alt="" />
       </div>
       <div className="main-container">
