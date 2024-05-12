@@ -1,7 +1,3 @@
-Here is the README file for your project, including operating system-specific installation instructions for Poetry CLI.
-
----
-
 # App
 
 This project is a FastAPI application.
@@ -14,7 +10,9 @@ This project is a FastAPI application.
     - [Windows (WSL)](#windows-wsl)
     - [Windows (Powershell)](#windows-powershell)
   - [Installing Dependencies](#installing-dependencies)
+- [Environment Variables](#environment-variables)
 - [Running the Project](#running-the-project)
+- [API Documentation](#api-documentation)
 
 ## Installation
 
@@ -58,6 +56,13 @@ poetry install
 
 This will install all dependencies specified in the `pyproject.toml` file.
 
+## Environment Variables
+
+This project uses environment variables for configuration. You need to create a `.env` file inside the `server/` directory and specify the necessary environment variables as shown in the provided `.env.example` file.
+
+- **OpenAI API Key**: Set the `OPENAI_API_KEY` environment variable in your `.env` file to access GPT and Ada embedding models.
+- **Pinecone API Key and Index**: Set the `PINECONE_API_KEY` and `PINECONE_INDEX` environment variables in your `.env` file to connect to Pinecone as the vector database.
+
 ## Running the Project
 
 To run the project, first make sure you are inside the project directory. Then, use the following command to run the application:
@@ -67,5 +72,9 @@ poetry run dev
 ```
 
 This will execute the FastAPI application using Uvicorn as the server.
+
+## API Documentation
+
+You can access the FastAPI Swagger documentation at `http://localhost:8000/docs` once the server is running. This documentation provides an overview of the available endpoints, request and response formats, and other details about your FastAPI application.
 
 ---
